@@ -11,17 +11,17 @@ def age_bin(k):
     k=np.asarray(k); return np.where(k<=20,k,20+np.ceil((k-20)/5)).astype(int)
 
 def pessoa_dia(e,D):
-    """Uma linha por negocio por dia em risco, ate D. Respeita o corte de 1/3/2017 (antes disso a base nao registra fechamentos)."""
+    """Uma linha por negocio por dia em risco, ate D. Respeita o corte de 1/3/2017 (antes disso a base nao registra encerramentos)."""
     d=e[e.engage_date<D].copy()
-    fechado=d.close_date.notna()&(d.close_date<=D)
-    ult=np.where(fechado,d.t,(D-d.engage_date).dt.days).astype(int)       # ultimo dia observado
+    encerrado=d.close_date.notna()&(d.close_date<=D)
+    ult=np.where(encerrado,d.t,(D-d.engage_date).dt.days).astype(int)       # ultimo dia observado
     prim=np.maximum(1,(INI-d.engage_date).dt.days.values).astype(int)     # primeiro dia observavel
     n=np.maximum(0,ult-prim+1)
     idx=np.repeat(np.arange(len(d)),n)
     k=np.concatenate([np.arange(a,b+1) for a,b in zip(prim,ult) if b>=a]) if n.sum() else np.array([],int)
     pd_=pd.DataFrame({'i':d.index.values[idx],'k':k})
     pd_['data']=d.engage_date.values[idx]+pd.to_timedelta(k,'D')
-    evk=np.where(fechado.values[idx]&(k==ult[idx]),d.ev.values[idx],0)
+    evk=np.where(encerrado.values[idx]&(k==ult[idx]),d.ev.values[idx],0)
     pd_['y']=evk
     pd_['dq']=dia_tri(pd_.data); pd_['mq']=mes_tri(pd_.data)
     pd_['dq_ent']=dia_tri(pd.Series(d.engage_date.values[idx])).values
@@ -55,7 +55,7 @@ class GBM:
         X=pd.DataFrame({'k':k,'dq':dia_tri(pd.Series(data)).values,'dq_ent':dq_ent,'preco':preco})[self.feats]
         pr=self.m.predict_proba(X); cl=list(self.m.classes_)
         hw=pr[:,cl.index(1)]; hl=pr[:,cl.index(2)]
-        z=np.asarray(k)>self.kmax; hw[z]=0; hl[z]=0   # depois da maior idade em que algum negocio fechou, risco zero
+        z=np.asarray(k)>self.kmax; hw[z]=0; hl[z]=0   # depois da maior idade em que algum negocio foi encerrado, risco zero
         return hw,hl
 
 def projetar(modelo,eng,preco,D,fim):
