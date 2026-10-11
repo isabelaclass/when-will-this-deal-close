@@ -1,4 +1,4 @@
-"""Detector de pipeline inflado: compara, semana a semana, a fracao de negocios que fecham em ate 20 dias
+"""Detector de pipeline inflado: compara, semana a semana, a fracao de negocios encerrados (ganhos ou perdidos) em ate 20 dias
 em cada regional com a das outras regionais na mesma semana. Usa so o que se sabe na data de corte D."""
 import numpy as np
 import pandas as pd
